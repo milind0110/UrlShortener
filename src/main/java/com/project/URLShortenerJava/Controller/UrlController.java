@@ -3,8 +3,6 @@ package com.project.URLShortenerJava.Controller;
 import java.net.URI;
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,8 +28,6 @@ public class UrlController {
 	@Autowired
 	private UrlService service;
 	
-	Logger logger = LoggerFactory.getLogger(UrlController.class);
-	
 	@PostMapping("/create")
 	public Mono<ResponseEntity<Response>> createUrl(@RequestBody RequestUrl request) {
 		return service.generateShortUrl(request)
@@ -50,17 +46,13 @@ public class UrlController {
 	}
 	
 	@GetMapping("/report/visited")
-	public Flux<ResponseEntity<UrlReportDto>> geUrlReport(@RequestParam(required = false) Optional<String> date) {
-		return (date.isPresent() ? service.getVisitedReportByDate(date.get()) : service.getVisitedReportAll())
-				.map(response -> ResponseEntity.status(HttpStatus.OK)
-						.body(response));
+	public Flux<UrlReportDto> geUrlReport(@RequestParam(required = false) Optional<String> date, @RequestParam(required = false) Optional<String> type) {
+		return (date.isPresent() ? service.getVisitedReportByDate(date.get()) : service.getVisitedReportAll());
 	}
 	
 	@GetMapping("/report/generated")
-	public Flux<ResponseEntity<UrlReportDto>> getGeneratedUrlReport(@RequestParam(required = false) Optional<String> date) {
-		return (date.isPresent() ? service.getGeneratedReportByDate(date.get()) : service.getGeneratedReportAll())
-				.map(response -> ResponseEntity.status(HttpStatus.OK)
-						.body(response));
+	public Flux<UrlReportDto> getGeneratedUrlReport(@RequestParam(required = false) Optional<String> date) {
+		return (date.isPresent() ? service.getGeneratedReportByDate(date.get()) : service.getGeneratedReportAll());
 	}
 
 }

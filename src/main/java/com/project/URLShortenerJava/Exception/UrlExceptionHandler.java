@@ -59,5 +59,12 @@ public class UrlExceptionHandler extends ResponseEntityExceptionHandler {
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorDetails);
 	}
 	
+	@ExceptionHandler(InvalidUserIdException.class)
+	protected final ResponseEntity<Map<String, String>> handleInvalidUserIdException(InvalidUserIdException ex) {
+		Map<String,String> errorDetails = new HashMap<>();
+		errorDetails.put("message",ex.getMessage());
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorDetails);
+	}
+	
 	
 }

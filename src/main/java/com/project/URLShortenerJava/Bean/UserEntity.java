@@ -1,11 +1,11 @@
 package com.project.URLShortenerJava.Bean;
 
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.MongoId;
 
 @Document("UserTable")
 public class UserEntity {
-	@MongoId
+	@Id
 	private String id;
 	private String userId;
 

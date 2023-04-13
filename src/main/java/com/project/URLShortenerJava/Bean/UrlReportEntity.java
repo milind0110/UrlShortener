@@ -2,10 +2,12 @@ package com.project.URLShortenerJava.Bean;
 
 import java.time.LocalDate;
 
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document("UrlReportTable")
 public class UrlReportEntity {
+	@Id
 	private String id;
 	private LocalDate fetchDate;
 	private LocalDate createDate;

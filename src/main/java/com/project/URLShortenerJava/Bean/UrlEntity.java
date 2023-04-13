@@ -2,12 +2,12 @@ package com.project.URLShortenerJava.Bean;
 
 import java.time.LocalDate;
 
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.MongoId;
 
 @Document(collection = "UrlTable")
 public class UrlEntity {
-	@MongoId
+	@Id
 	private String id;
 	private String shortUrl;
 	private String longUrl;
