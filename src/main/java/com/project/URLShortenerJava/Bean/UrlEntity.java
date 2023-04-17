@@ -14,6 +14,7 @@ public class UrlEntity {
 	private Long clicks;
 	private LocalDate createDate;
 	private String userId;
+	private Boolean isActive;
 
 	public UrlEntity() {
 		super();
@@ -35,14 +36,14 @@ public class UrlEntity {
 		this.userId = userId;
 	}
 
-	public UrlEntity(String id, String shortUrl, String longUrl, Long clicks, LocalDate createDate, String userId) {
+	public UrlEntity(String shortUrl, String longUrl, Long clicks, LocalDate createDate, String userId,Boolean isActive) {
 		super();
-		this.id = id;
 		this.shortUrl = shortUrl;
 		this.longUrl = longUrl;
 		this.clicks = clicks;
 		this.createDate = createDate;
 		this.userId = userId;
+		this.isActive = isActive;
 	}
 
 	public String getId() {
@@ -76,11 +77,21 @@ public class UrlEntity {
 	public void setClicks(Long clicks) {
 		this.clicks = clicks;
 	}
+	
+	
+
+	public Boolean getIsActive() {
+		return isActive;
+	}
+
+	public void setIsActive(Boolean isActive) {
+		this.isActive = isActive;
+	}
 
 	@Override
 	public String toString() {
 		return "UrlEntity [id=" + id + ", shortUrl=" + shortUrl + ", longUrl=" + longUrl + ", clicks=" + clicks
-				+ ", createDate=" + createDate + ", userId=" + userId + "]";
+				+ ", createDate=" + createDate + ", userId=" + userId + ", isActive=" + isActive + "]";
 	}
 
 }

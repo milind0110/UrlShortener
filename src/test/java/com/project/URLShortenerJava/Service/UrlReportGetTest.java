@@ -9,7 +9,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.project.URLShortenerJava.Bean.UrlReportDto;
 import com.project.URLShortenerJava.Bean.UrlReportEntity;
 import com.project.URLShortenerJava.Exception.InvalidDateException;
 import com.project.URLShortenerJava.Exception.NoDataExistsException;
@@ -36,11 +35,11 @@ public class UrlReportGetTest {
 		String mockUrl2 = "http://localhost:8080/bcd";
 		
 		Flux<UrlReportEntity> mockFlux = Flux.just(
-				new UrlReportEntity("1", LocalDate.parse(date), LocalDate.parse(date), 0L, mockUrl1,"Milind"),
-				new UrlReportEntity("2", LocalDate.parse(date), LocalDate.parse(date), 0L, mockUrl2,"Milind"));
+				new UrlReportEntity(LocalDate.parse(date), LocalDate.parse(date), 0L, mockUrl1,"Milind"),
+				new UrlReportEntity(LocalDate.parse(date), LocalDate.parse(date), 0L, mockUrl2,"Milind"));
 		
 		Mockito.when(urlReportRepository.findByFetchDateAndClicksGreaterThan(Mockito.any(LocalDate.class),Mockito.anyInt())).thenReturn(mockFlux);
-		Flux<UrlReportDto> report = service.getVisitedReportByDate(date);
+		Flux<UrlReportEntity> report = service.getVisitedReportByDate(date);
 		
 		StepVerifier.create(report)
 		.expectNextCount(2)
@@ -52,7 +51,7 @@ public class UrlReportGetTest {
 		
 		String date = "20-03-23";
 		
-		Flux<UrlReportDto> report = service.getVisitedReportByDate(date)
+		Flux<UrlReportEntity> report = service.getVisitedReportByDate(date)
 				.doOnError(err -> System.out.println(err.getMessage()));
 		
 		StepVerifier.create(report)
@@ -67,11 +66,11 @@ public class UrlReportGetTest {
 		String mockUrl2 = "http://localhost:8080/bcd";
 		
 		Flux<UrlReportEntity> mockFlux = Flux.just(
-				new UrlReportEntity("1", LocalDate.parse(date), LocalDate.parse(date), 0L, mockUrl1,"Milind"),
-				new UrlReportEntity("2", LocalDate.parse(date), LocalDate.parse(date), 0L, mockUrl2,"Milind"));
+				new UrlReportEntity(LocalDate.parse(date), LocalDate.parse(date), 0L, mockUrl1,"Milind"),
+				new UrlReportEntity(LocalDate.parse(date), LocalDate.parse(date), 0L, mockUrl2,"Milind"));
 		
 		Mockito.when(urlReportRepository.findByClicksGreaterThan(Mockito.anyInt())).thenReturn(mockFlux);
-		Flux<UrlReportDto> report = service.getVisitedReportAll();
+		Flux<UrlReportEntity> report = service.getVisitedReportAll();
 		
 		StepVerifier.create(report)
 		.expectNextCount(2)
@@ -85,7 +84,7 @@ public class UrlReportGetTest {
 		String date = "2022-03-23";
 		
 		Mockito.when(urlReportRepository.findByFetchDateAndClicksGreaterThan(Mockito.any(LocalDate.class),Mockito.anyInt())).thenReturn(Flux.empty());
-		Flux<UrlReportDto> report = service.getVisitedReportByDate(date);
+		Flux<UrlReportEntity> report = service.getVisitedReportByDate(date);
 		
 		StepVerifier.create(report)
 		.verifyError(NoDataExistsException.class);
@@ -95,7 +94,7 @@ public class UrlReportGetTest {
 	public void getVisitedUrlWithoutDateNoDataExistsTest() {
 		
 		Mockito.when(urlReportRepository.findByClicksGreaterThan(Mockito.anyInt())).thenReturn(Flux.empty());
-		Flux<UrlReportDto> report = service.getVisitedReportAll();
+		Flux<UrlReportEntity> report = service.getVisitedReportAll();
 		
 		StepVerifier.create(report)
 		.verifyError(NoDataExistsException.class);
@@ -109,11 +108,11 @@ public class UrlReportGetTest {
 		String mockUrl2 = "http://localhost:8080/bcd";
 		
 		Flux<UrlReportEntity> mockFlux = Flux.just(
-				new UrlReportEntity("1", LocalDate.parse(date), LocalDate.parse(date), 0L, mockUrl1,"Milind"),
-				new UrlReportEntity("2", LocalDate.parse(date), LocalDate.parse(date), 0L, mockUrl2,"Milind"));
+				new UrlReportEntity(LocalDate.parse(date), LocalDate.parse(date), 0L, mockUrl1,"Milind"),
+				new UrlReportEntity(LocalDate.parse(date), LocalDate.parse(date), 0L, mockUrl2,"Milind"));
 		
 		Mockito.when(urlReportRepository.findByCreateDate(Mockito.any(LocalDate.class))).thenReturn(mockFlux);
-		Flux<UrlReportDto> report = service.getGeneratedReportByDate(date);
+		Flux<UrlReportEntity> report = service.getGeneratedReportByDate(date);
 		
 		StepVerifier.create(report)
 		.expectNextCount(2)
@@ -125,7 +124,7 @@ public class UrlReportGetTest {
 		
 		String date = "20-03-23";
 		
-		Flux<UrlReportDto> report = service.getGeneratedReportByDate(date)
+		Flux<UrlReportEntity> report = service.getGeneratedReportByDate(date)
 				.doOnError(err -> System.out.println(err.getMessage()));
 		
 		StepVerifier.create(report)
@@ -140,11 +139,11 @@ public class UrlReportGetTest {
 		String mockUrl2 = "http://localhost:8080/bcd";
 		
 		Flux<UrlReportEntity> mockFlux = Flux.just(
-				new UrlReportEntity("1", LocalDate.parse(date), LocalDate.parse(date), 0L, mockUrl1,"Milind"),
-				new UrlReportEntity("2", LocalDate.parse(date), LocalDate.parse(date), 0L, mockUrl2,"Milind"));
+				new UrlReportEntity(LocalDate.parse(date), LocalDate.parse(date), 0L, mockUrl1,"Milind"),
+				new UrlReportEntity(LocalDate.parse(date), LocalDate.parse(date), 0L, mockUrl2,"Milind"));
 		
 		Mockito.when(urlReportRepository.findAll()).thenReturn(mockFlux);
-		Flux<UrlReportDto> report = service.getGeneratedReportAll();
+		Flux<UrlReportEntity> report = service.getGeneratedReportAll();
 		
 		StepVerifier.create(report)
 		.expectNextCount(2)
@@ -158,7 +157,7 @@ public class UrlReportGetTest {
 		String date = "2022-03-23";
 		
 		Mockito.when(urlReportRepository.findByCreateDate(Mockito.any(LocalDate.class))).thenReturn(Flux.empty());
-		Flux<UrlReportDto> report = service.getGeneratedReportByDate(date);
+		Flux<UrlReportEntity> report = service.getGeneratedReportByDate(date);
 		
 		StepVerifier.create(report)
 		.verifyError(NoDataExistsException.class);
@@ -168,7 +167,7 @@ public class UrlReportGetTest {
 	public void getGeneratedUrlWithoutDateNoDataExistsTest() {
 		
 		Mockito.when(urlReportRepository.findAll()).thenReturn(Flux.empty());
-		Flux<UrlReportDto> report = service.getGeneratedReportAll();
+		Flux<UrlReportEntity> report = service.getGeneratedReportAll();
 		
 		StepVerifier.create(report)
 		.verifyError(NoDataExistsException.class);

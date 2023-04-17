@@ -15,9 +15,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.project.URLShortenerJava.Bean.RequestUrl;
-import com.project.URLShortenerJava.Bean.Response;
 import com.project.URLShortenerJava.Bean.UrlReportDto;
+import com.project.URLShortenerJava.Bean.UserResponseDto;
 import com.project.URLShortenerJava.Service.UrlService;
+import com.project.URLShortenerJava.Util.AppUtil;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -29,8 +30,9 @@ public class UrlController {
 	private UrlService service;
 	
 	@PostMapping("/create")
-	public Mono<ResponseEntity<Response>> createUrl(@RequestBody RequestUrl request) {
+	public Mono<ResponseEntity<UserResponseDto>> createUrl(@RequestBody RequestUrl request) {
 		return service.generateShortUrl(request)
+				.map(AppUtil::userResponseEntityToDto)
 				.map(response -> ResponseEntity.status(HttpStatus.OK)
 						.body(response));
 	}
@@ -47,12 +49,14 @@ public class UrlController {
 	
 	@GetMapping("/report/visited")
 	public Flux<UrlReportDto> geUrlReport(@RequestParam(required = false) Optional<String> date, @RequestParam(required = false) Optional<String> type) {
-		return (date.isPresent() ? service.getVisitedReportByDate(date.get()) : service.getVisitedReportAll());
+		return (date.isPresent() ? service.getVisitedReportByDate(date.get()) : service.getVisitedReportAll())
+				.map(AppUtil::urlReportEntityToDto);
 	}
 	
 	@GetMapping("/report/generated")
 	public Flux<UrlReportDto> getGeneratedUrlReport(@RequestParam(required = false) Optional<String> date) {
-		return (date.isPresent() ? service.getGeneratedReportByDate(date.get()) : service.getGeneratedReportAll());
+		return (date.isPresent() ? service.getGeneratedReportByDate(date.get()) : service.getGeneratedReportAll())
+				.map(AppUtil::urlReportEntityToDto);
 	}
 
 }

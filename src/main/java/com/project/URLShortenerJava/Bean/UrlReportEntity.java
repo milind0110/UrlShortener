@@ -5,7 +5,7 @@ import java.time.LocalDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document("UrlReportTable")
+@Document(collection = "UrlReportTable")
 public class UrlReportEntity {
 	@Id
 	private String id;
@@ -19,10 +19,9 @@ public class UrlReportEntity {
 		super();
 	}
 
-	public UrlReportEntity(String id, LocalDate fetchDate, LocalDate createDate, Long clicks, String shortUrl,
+	public UrlReportEntity(LocalDate fetchDate, LocalDate createDate, Long clicks, String shortUrl,
 			String userId) {
 		super();
-		this.id = id;
 		this.fetchDate = fetchDate;
 		this.createDate = createDate;
 		this.clicks = clicks;

@@ -3,7 +3,6 @@ package com.project.URLShortenerJava.Bean;
 import java.time.LocalDate;
 
 public class UrlReportDto {
-	private String id;
 	private LocalDate fetchDate;
 	private LocalDate createDate;
 	private Long clicks;
@@ -29,14 +28,6 @@ public class UrlReportDto {
 
 	public void setUserId(String userId) {
 		this.userId = userId;
-	}
-
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
 	}
 
 	public LocalDate getFetchDate() {
@@ -73,7 +64,7 @@ public class UrlReportDto {
 
 	@Override
 	public String toString() {
-		return "UrlReportDto [id=" + id + ", fetchDate=" + fetchDate + ", createDate=" + createDate + ", clicks="
-				+ clicks + ", shortUrl=" + shortUrl + ", userId=" + userId + "]";
+		return "UrlReportDto [fetchDate=" + fetchDate + ", createDate=" + createDate + ", clicks=" + clicks
+				+ ", shortUrl=" + shortUrl + ", userId=" + userId + "]";
 	}
 }

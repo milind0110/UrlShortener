@@ -2,26 +2,16 @@ package com.project.URLShortenerJava.Util;
 
 import org.springframework.beans.BeanUtils;
 
-import com.project.URLShortenerJava.Bean.Response;
-import com.project.URLShortenerJava.Bean.UrlDto;
+import com.project.URLShortenerJava.Bean.RequestUrl;
 import com.project.URLShortenerJava.Bean.UrlEntity;
 import com.project.URLShortenerJava.Bean.UrlReportDto;
 import com.project.URLShortenerJava.Bean.UrlReportEntity;
-import com.project.URLShortenerJava.Bean.UserDto;
 import com.project.URLShortenerJava.Bean.UserEntity;
+import com.project.URLShortenerJava.Bean.UserResponseDto;
+import com.project.URLShortenerJava.Bean.UserResponseEntity;
 
 public class AppUtil {
-	public static UrlDto urlEntityToDto(UrlEntity entity) {
-		UrlDto dto = new UrlDto();
-		BeanUtils.copyProperties(entity,dto);
-		return dto;
-	}
-	
-	public static UrlEntity urlDtoToEntity(UrlDto dto) {
-		UrlEntity entity = new UrlEntity();
-		BeanUtils.copyProperties(dto,entity);
-		return entity;
-	}
+
 	public static UrlReportDto urlReportEntityToDto(UrlReportEntity entity) {
 		UrlReportDto dto = new UrlReportDto();
 		BeanUtils.copyProperties(entity,dto);
@@ -34,24 +24,37 @@ public class AppUtil {
 		return entity;
 	}
 	
-	public static UserDto userEntityToDto(UserEntity entity) {
-		UserDto dto = new UserDto();
+	public static UserResponseDto userResponseEntityToDto(UserResponseEntity entity) {
+		UserResponseDto dto = new UserResponseDto();
 		BeanUtils.copyProperties(entity,dto);
 		return dto;
 	}
 	
-	public static UserEntity userDtoToEntity(UserDto dto) {
-		UserEntity entity = new UserEntity();
+	public static UserResponseEntity userResponseDtoToEntity(UserResponseDto dto) {
+		UserResponseEntity entity = new UserResponseEntity();
 		BeanUtils.copyProperties(dto,entity);
 		return entity;
 	}
 	
-	public static Response urlDtoToResponse(UrlDto dto) {
-		Response response = new Response();
-		response.setUrl(dto.getShortUrl());
-		response.setUserId(dto.getUserId());
+	public static UserEntity userResponseEntitytoEntity(UserResponseEntity userEntity) {
+		UserEntity entity = new UserEntity();
+		BeanUtils.copyProperties(userEntity,entity);
+		return entity;
+	}
+	
+	public static UserResponseEntity urlEntityToResponse(UrlEntity entity) {
+		UserResponseEntity response = new UserResponseEntity();
+		response.setUrl(entity.getShortUrl());
+		response.setUserId(entity.getUserId());
 		return response;
 	}
+	
+	public static UserResponseEntity requestToUserResponseEntity(RequestUrl request) {
+		UserResponseEntity response = new UserResponseEntity();
+		BeanUtils.copyProperties(request,response);
+		return response;
+	}
+	
 	
 	
 }

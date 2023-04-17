@@ -1,12 +1,10 @@
 package com.project.URLShortenerJava.Bean;
 
-import java.util.Optional;
-
 public class RequestUrl {
 	private String url;
-	private Optional<String> userId;
+	private String userId;
 	
-	public RequestUrl(String url, Optional<String> userId) {
+	public RequestUrl(String url, String userId) {
 		super();
 		this.url = url;
 		this.userId = userId;
@@ -20,11 +18,11 @@ public class RequestUrl {
 		this.url = url;
 	}
 
-	public Optional<String> getUserId() {
+	public String getUserId() {
 		return userId;
 	}
 
-	public void setUserId(Optional<String> userId) {
+	public void setUserId(String userId) {
 		this.userId = userId;
 	}
 

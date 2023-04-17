@@ -11,10 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.project.URLShortenerJava.Bean.RequestUrl;
-import com.project.URLShortenerJava.Bean.Response;
-import com.project.URLShortenerJava.Bean.UrlDto;
-import com.project.URLShortenerJava.Bean.UrlReportDto;
-import com.project.URLShortenerJava.Bean.UserDto;
+import com.project.URLShortenerJava.Bean.UrlEntity;
+import com.project.URLShortenerJava.Bean.UrlReportEntity;
+import com.project.URLShortenerJava.Bean.UserResponseEntity;
 import com.project.URLShortenerJava.Exception.InvalidDateException;
 import com.project.URLShortenerJava.Exception.InvalidLongUrlException;
 import com.project.URLShortenerJava.Exception.InvalidUserIdException;
@@ -49,38 +48,43 @@ public class UrlService {
 	
 	
 	//Generate ShortUrl for LongUrl
-	public Mono<Response> generateShortUrl(RequestUrl request) {
+	public Mono<UserResponseEntity> generateShortUrl(RequestUrl request) {
 		return Mono.fromSupplier(() -> request)
 					.flatMap(userData -> checkValid(userData))
-					.flatMap(userData -> mapRequestUrlToUserDto(userData))
-					.flatMap(userDtoData -> {
-						UrlDto urlDto = generateUrl(userDtoData);
-						UrlReportDto urlReportDto = generateReport(urlDto);
-						Mono<UrlDto> urlDtoResponse = saveToUrlRepository(urlDto);
-						Mono<UrlReportDto> urlReportDtoResponse = saveToUrlReportRepository(urlReportDto);
-						return Mono.zip(urlDtoResponse, urlReportDtoResponse)
+					.flatMap(userData -> mapRequestUrlToUserResponse(userData))
+					.flatMap(userEntityData -> {
+						UrlEntity urlEntity = generateUrl(userEntityData);
+						UrlReportEntity urlReportEntity = generateReport(urlEntity);
+						Mono<UrlEntity> urlEntityResponse = saveToUrlRepository(urlEntity);
+						Mono<UrlReportEntity> urlReportEntityResponse = saveToUrlReportRepository(urlReportEntity);
+						return Mono.zip(urlEntityResponse, urlReportEntityResponse)
 						.map(zippedResponse -> zippedResponse.getT1())
-						.map(AppUtil::urlDtoToResponse);
+						.map(AppUtil::urlEntityToResponse);
 					});
 		
 	}
 	
 	private Mono<RequestUrl> checkValid(RequestUrl request){
 		return Mono.fromSupplier(() -> request)
-				.filter(userData -> (!userData.getUrl().contains(domain) && UrlValidator.getInstance().isValid(userData.getUrl())))
-				.switchIfEmpty(Mono.error(new InvalidLongUrlException("Please enter a valid Url")));
+				.filter(userData -> UrlValidator.getInstance().isValid(userData.getUrl()))
+				.filter(userData -> (!userData.getUrl().contains(domain)))
+				.switchIfEmpty(Mono.error(new InvalidLongUrlException("Please enter a valid Url")))
+				.filter(userData -> userData.getUserId() != null)
+				.switchIfEmpty(Mono.error(new InvalidUserIdException("Please enter a valid UserId")));
 	}
 	
 	//Find UserId else Create UserId
-	private Mono<UserDto> mapRequestUrlToUserDto(RequestUrl userData) { 
+	private Mono<UserResponseEntity> mapRequestUrlToUserResponse(RequestUrl userData) { 
 		return Mono.fromSupplier(() -> userData)
 				.flatMap(user -> {
-					if(user.getUserId().isEmpty()) {
-						return Mono.fromSupplier(() -> generateUserDto(user))
-								.doOnNext(userDto -> saveToUserRepository(userDto).subscribe());
+					if(user.getUserId().isBlank()) {
+						return Mono.fromSupplier(() -> userData)
+								.map(userResponse -> generateUserResponse(userResponse))
+								.doOnNext(response -> userRepository.save(AppUtil.userResponseEntitytoEntity(response)).subscribe());
+								
 					} else {
-						return Mono.fromSupplier(() -> generateUserDto(user))
-								.flatMap(userDto -> checkUserIdAndLongUrl(userDto));
+						return Mono.fromSupplier(() -> generateUserResponse(user))
+								.flatMap(response -> checkUserIdAndLongUrl(response));
 					}
 							
 				});
@@ -89,63 +93,54 @@ public class UrlService {
 	
 	//Check UserId exists
 	//Check LongUrl exists for the UserId
-	private Mono<UserDto> checkUserIdAndLongUrl(UserDto userDto) {
-		return Mono.fromSupplier(() -> userDto)
-				.flatMap(userDtoData -> userRepository.findByUserId(userDto.getUserId())
+	private Mono<UserResponseEntity> checkUserIdAndLongUrl(UserResponseEntity response) {
+		return Mono.fromSupplier(() -> response)
+				.flatMap(userEntity -> userRepository.findByUserId(userEntity.getUserId())
 						.switchIfEmpty(Mono.error(new InvalidUserIdException("Invalid UserId")))
-						.then(Mono.fromSupplier(() -> userDto)))
-				.flatMap(userDtoData -> urlRepository
-						.findByUserIdAndLongUrl(userDto.getUserId(), userDto.getUrl())
-						.map(AppUtil::urlEntityToDto)
+						.then(Mono.fromSupplier(() -> userEntity)))
+				.flatMap(userEntity -> urlRepository
+						.findByUserIdAndLongUrl(userEntity.getUserId(), userEntity.getUrl())
 						.flatMap(existingUrl -> Mono.error(new UrlAlreadyExistsException("Short Url Already Exists for this URL",existingUrl.getShortUrl())))
-						.then(Mono.fromSupplier(() -> userDtoData)));
+						.then(Mono.fromSupplier(() -> userEntity)));
 	}
 	
-	//Map requestUrl to UserDto
+	//Map requestUrl to UserEntity
 	//Generate UserId if it doesn't exist
-	private UserDto generateUserDto(RequestUrl userData) {
-		UserDto userDto = new UserDto();
-		userDto.setUrl(userData.getUrl());
-		if(userData.getUserId().isEmpty()) {
-			userDto.setUserId(UserIdUtil.gen());
+	private UserResponseEntity generateUserResponse(RequestUrl userData) {
+		UserResponseEntity response = new UserResponseEntity();
+		response.setUrl(userData.getUrl());
+		if(userData.getUserId().isBlank()) {
+			response.setUserId(UserIdUtil.gen());
 		} else {
-			userDto.setUserId(userData.getUserId().get());
+			response.setUserId(userData.getUserId());
 		}
-		return userDto;
+		return response;
 	}
 	
-	//Save to User Repository
-	private Mono<UserDto> saveToUserRepository(UserDto userDto){
-		return userRepository.save(AppUtil.userDtoToEntity(userDto))
-				.map(AppUtil::userEntityToDto);
-	}
-	
-	//Generate UrlDto
-	private UrlDto generateUrl(UserDto userDtoData){
-		return new UrlDto(domain + HashIdUtil.encode(),userDtoData.getUrl(),0L,userDtoData.getUserId());
+	//Generate UrlEntity
+	private UrlEntity generateUrl(UserResponseEntity userEntityData){
+		return new UrlEntity(domain + HashIdUtil.encode(),userEntityData.getUrl(),0L,LocalDate.now(),userEntityData.getUserId(),true);
 	}
 	
 	//Delete from UrlRepository
-	private Mono<Void> deleteFromUrlRepository(UrlDto urlDto){
-		return urlRepository
-				.delete(AppUtil.urlDtoToEntity(urlDto));
+	private Mono<UrlEntity> deleteFromUrlRepository(UrlEntity urlEntity){
+		urlEntity.setIsActive(false);
+		return urlRepository.save(urlEntity);
 	}
 	
 	//Save to UrlRepository
-	private Mono<UrlDto> saveToUrlRepository(UrlDto urlDto) {
-		return urlRepository.save(AppUtil.urlDtoToEntity(urlDto))
-				.map(AppUtil::urlEntityToDto);
+	private Mono<UrlEntity> saveToUrlRepository(UrlEntity urlEntity) {
+		return urlRepository.save(urlEntity);
 	}
 	
 	//Save To UrlReportRepository
-	private Mono<UrlReportDto> saveToUrlReportRepository(UrlReportDto urlReportDto) {
-		return urlReportRepository.save(AppUtil.urlReportDtoToEntity(urlReportDto))
-				.map(AppUtil::urlReportEntityToDto);
+	private Mono<UrlReportEntity> saveToUrlReportRepository(UrlReportEntity urlReportEntity) {
+		return urlReportRepository.save(urlReportEntity);
 	}
 	
-	//Generate UrlReportDto
-	private UrlReportDto generateReport(UrlDto urlDto) {
-		return new UrlReportDto(urlDto.getCreateDate(),0L,urlDto.getShortUrl(),urlDto.getUserId());
+	//Generate UrlReportEntity
+	private UrlReportEntity generateReport(UrlEntity urlEntity) {
+		return new UrlReportEntity(urlEntity.getCreateDate(),LocalDate.now(),0L,urlEntity.getShortUrl(),urlEntity.getUserId());
 	}
 	
 	//Get LongUrl from Database
@@ -154,36 +149,34 @@ public class UrlService {
 		return Mono.fromSupplier(() -> shortUrl)
 				.filter(url -> url.length() == 6)
 				.switchIfEmpty(Mono.error(new ShortUrlNotFoundException("Invalid Short Url")))
-				.flatMap(url -> urlRepository.findByShortUrl(domain + url)
-						.map(AppUtil::urlEntityToDto))
+				.flatMap(url -> urlRepository.findByShortUrl(domain + url))
 				.switchIfEmpty(Mono.error(new ShortUrlNotFoundException("No Page Found")))
-				.flatMap(urlDtoData -> {
-					Mono<UrlDto> urlDto = updateUrl(urlDtoData);
-					Mono<UrlReportDto> urlReportDto = updateElseCreateUrlReport(urlDtoData);
-					return Mono.zip(urlDto,urlReportDto)
+				.flatMap(urlEntityData -> {
+					Mono<UrlEntity> urlEntity = updateUrl(urlEntityData);
+					Mono<UrlReportEntity> urlReportEntity = updateElseCreateUrlReport(urlEntityData);
+					return Mono.zip(urlEntity,urlReportEntity)
 							.map(zippedResponse -> zippedResponse.getT1().getLongUrl());
 				});
 	}
 	
-	//Update Clicks in UrlDto for ShortUrl
-	private Mono<UrlDto> updateUrl(UrlDto url){
+	//Update Clicks in UrlEntity for ShortUrl
+	private Mono<UrlEntity> updateUrl(UrlEntity url){
 		return Mono.fromSupplier(() -> url)
-				.doOnNext(urlDtoData -> urlDtoData.setClicks(urlDtoData.getClicks() + 1))
-				.flatMap(urlDtoData -> {
-					if(urlDtoData.getClicks() < threshold) {
-						return saveToUrlRepository(urlDtoData);
+				.doOnNext(urlEntityData -> urlEntityData.setClicks(urlEntityData.getClicks() + 1))
+				.flatMap(urlEntityData -> {
+					if(urlEntityData.getClicks() < threshold) {
+						return saveToUrlRepository(urlEntityData);
 					} else {
-						return deleteFromUrlRepository(urlDtoData).then(Mono.fromSupplier(() -> urlDtoData));
+						return deleteFromUrlRepository(urlEntityData);
 					}
 				});
 		 
 	}
 	
-	//Update Clicks in UrlReportDto for ShortUrl for CurrentDate
-	private Mono<UrlReportDto> updateElseCreateUrlReport(UrlDto urlData){
+	//Update Clicks in UrlReportEntity for ShortUrl for CurrentDate
+	private Mono<UrlReportEntity> updateElseCreateUrlReport(UrlEntity urlData){
 		return urlReportRepository
 				.findByShortUrlAndFetchDate(urlData.getShortUrl(), LocalDate.now())
-				.map(AppUtil::urlReportEntityToDto)
 				.defaultIfEmpty(generateReport(urlData))
 				.doOnNext(urlReportData -> urlReportData.setClicks(urlReportData.getClicks() + 1))
 				.flatMap(urlReportData -> saveToUrlReportRepository(urlReportData));
@@ -192,40 +185,36 @@ public class UrlService {
 	
 	
 	//Get Report on Clicks for particular Date
-	public Flux<UrlReportDto> getVisitedReportByDate(String queryDate) {
+	public Flux<UrlReportEntity> getVisitedReportByDate(String queryDate) {
 		return Mono.fromSupplier(() -> queryDate)
 				.filter(date -> GenericValidator.isDate(date,"yyyy-MM-dd",true))
 				.switchIfEmpty(Mono.error(new InvalidDateException(queryDate + " is not a Valid Date Format")))
 				.flux()
-				.flatMap(date -> urlReportRepository.findByFetchDateAndClicksGreaterThan(LocalDate.parse(date),0)
-						.map(AppUtil::urlReportEntityToDto))
+				.flatMap(date -> urlReportRepository.findByFetchDateAndClicksGreaterThan(LocalDate.parse(date),0))
 				.switchIfEmpty(Flux.error(new NoDataExistsException("No data exists for " + queryDate)));
 	}
 	
 	//Get Report on Clicks for All Date
-	public Flux<UrlReportDto> getVisitedReportAll() {
+	public Flux<UrlReportEntity> getVisitedReportAll() {
 		return urlReportRepository
 				.findByClicksGreaterThan(0)
-				.map(AppUtil::urlReportEntityToDto)
 				.switchIfEmpty(Mono.error(new NoDataExistsException("No data exists")));
 	}
 	
 	//Get Report on GeneratedUrls for particular Date
-	public  Flux<UrlReportDto> getGeneratedReportByDate(String queryDate) {
+	public  Flux<UrlReportEntity> getGeneratedReportByDate(String queryDate) {
 		return Mono.fromSupplier(() -> queryDate)
 				.filter(date -> GenericValidator.isDate(date,"yyyy-MM-dd",true))
 				.switchIfEmpty(Mono.error(new InvalidDateException(queryDate + " is not a Valid Date Format")))
 				.flux()
-				.flatMap(date -> urlReportRepository.findByCreateDate(LocalDate.parse(date))
-						.map(AppUtil::urlReportEntityToDto))
+				.flatMap(date -> urlReportRepository.findByCreateDate(LocalDate.parse(date)))
 				.switchIfEmpty(Flux.error(new NoDataExistsException("No data exists for " + queryDate)));
 	}
 	
 	//Get Report on GeneratedUrls for All Date
-	public  Flux<UrlReportDto> getGeneratedReportAll() {
+	public  Flux<UrlReportEntity> getGeneratedReportAll() {
 		return urlReportRepository
 				.findAll()
-				.map(AppUtil::urlReportEntityToDto)
 				.switchIfEmpty(Mono.error(new NoDataExistsException("No data exists")));
 	}
 

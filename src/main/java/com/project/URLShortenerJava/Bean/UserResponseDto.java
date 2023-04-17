@@ -1,14 +1,14 @@
 package com.project.URLShortenerJava.Bean;
 
-public class UserDto {
+public class UserResponseDto {
 	private String url;
 	private String userId;
-	public UserDto(String url, String userId) {
+	public UserResponseDto(String url, String userId) {
 		super();
 		this.url = url;
 		this.userId = userId;
 	}
-	public UserDto() {
+	public UserResponseDto() {
 		super();
 	}
 	public String getUrl() {

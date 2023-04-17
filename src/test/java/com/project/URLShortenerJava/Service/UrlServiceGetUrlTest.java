@@ -36,8 +36,8 @@ public class UrlServiceGetUrlTest {
 		
 		String mockLongUrl = "http://google.com";
 		String mockShortUrl = "abcdef";
-		UrlEntity mockEntity = new UrlEntity("1",domain + mockShortUrl,mockLongUrl,0L,LocalDate.now(), "Milind");
-		UrlReportEntity mockReportEntity = new UrlReportEntity("1",LocalDate.now(),LocalDate.now(),0L,domain + mockShortUrl,"Milind");
+		UrlEntity mockEntity = new UrlEntity(domain + mockShortUrl,mockLongUrl,0L,LocalDate.now(), "Milind",true);
+		UrlReportEntity mockReportEntity = new UrlReportEntity(LocalDate.now(),LocalDate.now(),0L,domain + mockShortUrl,"Milind");
 		Mockito.when(urlRepository.findByShortUrl(Mockito.any(String.class))).thenReturn(Mono.just(mockEntity));
 		Mockito.when(urlRepository.save(Mockito.any(UrlEntity.class))).thenReturn(Mono.just(mockEntity));
 		Mockito.when(urlReportRepository.findByShortUrlAndFetchDate(Mockito.any(String.class),Mockito.any(LocalDate.class))).thenReturn(Mono.just(mockReportEntity));
@@ -53,11 +53,11 @@ public class UrlServiceGetUrlTest {
 	public void longUrlFoundAndClicksExpiredTest() {
 		String mockLongUrl = "http://google.com";
 		String mockShortUrl = "abcdef";
-		UrlEntity mockEntity = new UrlEntity("1",domain + mockShortUrl,mockLongUrl,9L,LocalDate.now(), "Milind");
-		UrlReportEntity mockReportEntity = new UrlReportEntity("1",LocalDate.now(),LocalDate.now(),9L,domain + mockShortUrl,"Milind");
+		UrlEntity mockEntity = new UrlEntity(domain + mockShortUrl,mockLongUrl,2L,LocalDate.now(), "Milind",true);
+		UrlReportEntity mockReportEntity = new UrlReportEntity(LocalDate.now(),LocalDate.now(),9L,domain + mockShortUrl,"Milind");
 		Mockito.when(urlRepository.findByShortUrl(Mockito.any(String.class))).thenReturn(Mono.just(mockEntity));
-		Mockito.when(urlRepository.delete(Mockito.any(UrlEntity.class))).thenReturn(Mono.empty());
 		Mockito.when(urlReportRepository.findByShortUrlAndFetchDate(Mockito.any(String.class),Mockito.any(LocalDate.class))).thenReturn(Mono.just(mockReportEntity));
+		Mockito.when(urlRepository.save(Mockito.any(UrlEntity.class))).thenReturn(Mono.just(mockEntity));
 		Mockito.when(urlReportRepository.save(Mockito.any(UrlReportEntity.class))).thenReturn(Mono.just(mockReportEntity));
 		Mono<String> longUrl = service.getLongUrl(mockShortUrl);
 		

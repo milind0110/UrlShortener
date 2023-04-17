@@ -1,15 +1,15 @@
 package com.project.URLShortenerJava.Bean;
 
-public class Response {
+public class UserResponseEntity {
 	private String url;
 	private String userId;
-	public Response(String url, String userId) {
+	public UserResponseEntity(String url, String userId) {
 		super();
 		this.url = url;
 		this.userId = userId;
 	}
 	
-	public Response() {
+	public UserResponseEntity() {
 		super();
 	}
 
